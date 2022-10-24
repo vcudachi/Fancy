@@ -1,4 +1,16 @@
-﻿$BatchOrder = 5
+﻿#Requires -Version 7.2
+###################################
+# FANCY CODE ######################
+###################################
+# ForEach Perfomance Testing ######
+###################################
+# Author :  VCUDACHI              #
+# License:  MIT                   #
+# Created:  2022-1024@2101        #
+# Version:  0.1                   #
+###################################
+
+$BatchOrder = 6
 $BatchSize = [int32]('9' * $BatchOrder)
 $arr = [int32[]](0..$BatchSize)
 
@@ -6,6 +18,7 @@ $code = [System.Collections.ArrayList]::New()
 #0
 $null = $code.add(
     [pscustomobject]@{
+        Name        = 'ForEach-Object'
         ScriptBlock = {
             $sum = [int32]0
             $add = [int32]($BatchSize + 1)
@@ -16,6 +29,7 @@ $null = $code.add(
 #1
 $null = $code.add(
     [pscustomobject]@{
+        Name        = 'ForEach-Object -Parallel'
         ScriptBlock = {
             $n = 20
             $ChunkSize = [math]::Truncate($arr.count / $n)
@@ -36,6 +50,7 @@ $null = $code.add(
 #2
 $null = $code.add(
     [pscustomobject]@{
+        Name        = '.ForEach'
         ScriptBlock = { 
             $sum = [int32]0
             $add = [int32]($BatchSize + 1)
@@ -46,6 +61,7 @@ $null = $code.add(
 #3
 $null = $code.add(
     [pscustomobject]@{
+        Name        = 'ForEach'
         ScriptBlock = { 
             $sum = [int32]0
             $add = [int32]($BatchSize + 1)
@@ -56,6 +72,7 @@ $null = $code.add(
 #4
 $null = $code.add(
     [pscustomobject]@{
+        Name        = 'For'
         ScriptBlock = { 
             $sum = [int32]0
             $add = [int32]($BatchSize + 1)
@@ -66,6 +83,7 @@ $null = $code.add(
 #5
 $null = $code.add(
     [pscustomobject]@{
+        Name        = 'While'
         ScriptBlock = { 
             $sum = [int32]0
             $add = [int32]($BatchSize + 1)
@@ -79,6 +97,7 @@ $null = $code.add(
 #6
 $null = $code.add(
     [pscustomobject]@{
+        Name        = 'Enumerator'
         ScriptBlock = { 
             $sum = [int32]0
             $add = [int32]($BatchSize + 1)
@@ -92,12 +111,9 @@ $null = $code.add(
 
 #INVOKE
 $code | ForEach-Object { 
-    $Measure1 = Measure-Command $_.ScriptBlock
-    $Measure2 = Measure-Command $_.ScriptBlock
-    $Measure3 = Measure-Command $_.ScriptBlock
-    $Measure4 = Measure-Command $_.ScriptBlock
-    $Measure5 = Measure-Command $_.ScriptBlock
-    $_ | Add-Member -MemberType NoteProperty -Name Milliseconds -Value ([int][math]::Round((($Measure1 + $Measure2 + $Measure3 + $Measure4 + $Measure5).TotalMilliseconds / 5)))
+    $ScriptBlock = $_.ScriptBlock
+    $Measures = 0..9 | ForEach-Object { Measure-Command $ScriptBlock }
+    $_ | Add-Member -MemberType NoteProperty -Name Milliseconds -Value ([int]([math]::Round(($Measures.TotalMilliseconds | Measure-Object -Average).Average)))
 }
 
 $code | Out-GridView
